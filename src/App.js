@@ -4,6 +4,7 @@ import { Toaster } from "./components/ui/sonner";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import AdminPanel from "./components/AdminPanel";
+import { TattooProvider } from "./hooks/useTattoos";
 
 // Carregamento lento de componentes pesados
 const About = lazy(() => import("./components/About"));
@@ -44,29 +45,31 @@ function App() {
   }, []);
 
   return (
-    <div className="App" data-theme={isDarkMode ? 'dark' : 'light'}>
-      <Header isDarkMode={isDarkMode} onToggleDarkMode={handleToggleDarkMode} />
-      <main>
-        <Hero />
-        <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-          <About />
-        </Suspense>
-        <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-          <Portfolio />
-        </Suspense>
-        <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-          <ContactForm />
-        </Suspense>
-        <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-          <MapSection />
-        </Suspense>
-        <Suspense fallback={null}>
-          <Footer />
-        </Suspense>
-      </main>
-      <Toaster position="top-right" />
-      <AdminPanel isOpen={adminPanelOpen} onClose={() => setAdminPanelOpen(false)} />
-    </div>
+    <TattooProvider>
+      <div className="App" data-theme={isDarkMode ? 'dark' : 'light'}>
+        <Header isDarkMode={isDarkMode} onToggleDarkMode={handleToggleDarkMode} />
+        <main>
+          <Hero />
+          <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+            <About />
+          </Suspense>
+          <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+            <Portfolio />
+          </Suspense>
+          <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+            <ContactForm />
+          </Suspense>
+          <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+            <MapSection />
+          </Suspense>
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
+        </main>
+        <Toaster position="top-right" />
+        <AdminPanel isOpen={adminPanelOpen} onClose={() => setAdminPanelOpen(false)} />
+      </div>
+    </TattooProvider>
   );
 }
 

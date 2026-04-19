@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Upload, X, Loader2 } from 'lucide-react'
 import { useTattoos } from '../hooks/useTattoos'
@@ -156,17 +155,18 @@ const TattooUpload = () => {
           {/* Category Selection */}
           <div className="space-y-2">
             <Label htmlFor="category">Categoria</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="realismo">Realismo</SelectItem>
-                <SelectItem value="arteSacra">Arte Sacra</SelectItem>
-                <SelectItem value="blackwork">Blackwork</SelectItem>
-                <SelectItem value="outros">Outros</SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              id="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+            >
+              <option value="">Selecione uma categoria</option>
+              <option value="realismo">Realismo</option>
+              <option value="arteSacra">Arte Sacra</option>
+              <option value="blackwork">Blackwork</option>
+              <option value="outros">Outros</option>
+            </select>
           </div>
 
           {/* Alt Text */}

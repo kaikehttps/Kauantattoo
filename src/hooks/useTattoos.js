@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import { TattooService } from '../services/tattooService'
 
-export const useTattoos = () => {
+const TattooContext = createContext(null)
+
+export const TattooProvider = ({ children }) => {
   const [tattoos, setTattoos] = useState({
     realismo: [],
     arteSacra: [],
@@ -11,8 +13,7 @@ export const useTattoos = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Load tattoos from Supabase
-  const loadTattoos = async () => {
+  const loadTattoos = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -24,40 +25,30 @@ export const useTattoos = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  // Upload new tattoo
-  const uploadTattoo = async (file, category, metadata = {}) => {
+  const uploadTattoo = useCallback(async (file, category, metadata = {}) => {
     try {
       setError(null)
-
-      // Upload image to storage
       const uploadResult = await TattooService.uploadImage(file, category, metadata)
-
-      // Save tattoo data to database
       const tattooData = {
         image_url: uploadResult.url,
         image_path: uploadResult.path,
-        category: category,
+        category,
         alt: metadata.alt || 'Nova tattoo',
         price: metadata.price || null,
         description: metadata.description || null
       }
-
       const savedTattoo = await TattooService.saveTattoo(tattooData)
-
-      // Reload tattoos to update the UI
       await loadTattoos()
-
       return savedTattoo
     } catch (err) {
       setError(err.message)
       throw err
     }
-  }
+  }, [loadTattoos])
 
-  // Delete tattoo
-  const deleteTattoo = async (id, imagePath) => {
+  const deleteTattoo = useCallback(async (id, imagePath) => {
     try {
       setError(null)
       await TattooService.deleteTattoo(id, imagePath)
@@ -67,10 +58,9 @@ export const useTattoos = () => {
       setError(err.message)
       throw err
     }
-  }
+  }, [loadTattoos])
 
-  // Update tattoo
-  const updateTattoo = async (id, updates) => {
+  const updateTattoo = useCallback(async (id, updates) => {
     try {
       setError(null)
       const updatedTattoo = await TattooService.updateTattoo(id, updates)
@@ -80,14 +70,13 @@ export const useTattoos = () => {
       setError(err.message)
       throw err
     }
-  }
+  }, [loadTattoos])
 
-  // Load tattoos on mount
   useEffect(() => {
     loadTattoos()
-  }, [])
+  }, [loadTattoos])
 
-  return {
+  const value = useMemo(() => ({
     tattoos,
     loading,
     error,
@@ -95,5 +84,19 @@ export const useTattoos = () => {
     deleteTattoo,
     updateTattoo,
     reloadTattoos: loadTattoos
+  }), [tattoos, loading, error, uploadTattoo, deleteTattoo, updateTattoo, loadTattoos])
+
+  return (
+    <TattooContext.Provider value={value}>
+      {children}
+    </TattooContext.Provider>
+  )
+}
+
+export const useTattoos = () => {
+  const context = useContext(TattooContext)
+  if (!context) {
+    throw new Error('useTattoos must be used inside a TattooProvider')
   }
+  return context
 }
