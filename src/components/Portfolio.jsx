@@ -1,9 +1,10 @@
-import React, { useState, useRef, memo, useEffect } from 'react';
+import React, { useState, useRef, memo } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
-import { tattooCategories as defaultCategories } from '../data/mock';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import useOtimizacaoScroll from '../hooks/useScrollOptimization';
-import { X, ChevronLeft, ChevronRight, Image } from 'lucide-react';
+import { useTattoos } from '../hooks/useTattoos';
+import { tattooCategories } from '../data/mock';
+import { X, ChevronLeft, ChevronRight, Image, Loader2 } from 'lucide-react';
 
 // Lightbox Component
 const Lightbox = ({ images, currentIndex, onClose, onPrev, onNext }) => {
@@ -105,78 +106,17 @@ PortfolioCard.displayName = 'PortfolioCard';
 
 const Portfolio = () => {
   const [activeCategory, setActiveCategory] = useState('realismo');
-  const [tattooCategories, setTattooCategories] = useState(defaultCategories);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  
+
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const isScrolling = useOtimizacaoScroll();
-
-  const loadImages = () => {
-    const categories = {
-      realismo: [],
-      arteSacra: [],
-      blackwork: [],
-      outros: []
-    };
-
-    try {
-      const customImages = localStorage.getItem('portfolioImages');
-      const customList = customImages ? JSON.parse(customImages) : [];
-      
-      const grouped = {
-        realismo: [],
-        arteSacra: [],
-        blackwork: [],
-        outros: []
-      };
-      
-      customList.forEach(img => {
-        if (grouped[img.category]) {
-          grouped[img.category].push(img);
-        }
-      });
-      
-      const merged = {
-        realismo: [...grouped.realismo, ...categories.realismo],
-        arteSacra: [...grouped.arteSacra, ...categories.arteSacra],
-        blackwork: [...grouped.blackwork, ...categories.blackwork],
-        outros: [...grouped.outros, ...categories.outros]
-      };
-      
-      setTattooCategories(merged);
-    } catch (e) {
-      console.error('Error loading custom images:', e);
-      setTattooCategories(categories);
-    }
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadImages();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      loadImages();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('portfolioUpdated', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('portfolioUpdated', handleStorageChange);
-    };
-  }, []);
+  const { tattoos, loading, error } = useTattoos();
 
   const handleImageClick = (index) => {
-    const currentCategoryImages = tattooCategories[activeCategory] || [];
+    const currentCategoryImages = tattoos[activeCategory] || [];
     if (currentCategoryImages.length > 0) {
       setLightboxImages(currentCategoryImages);
       setLightboxIndex(index);
@@ -194,14 +134,41 @@ const Portfolio = () => {
 
   const getAllImages = () => {
     return [
-      ...tattooCategories.realismo,
-      ...tattooCategories.arteSacra,
-      ...tattooCategories.blackwork,
-      ...tattooCategories.outros
+      ...tattoos.realismo,
+      ...tattoos.arteSacra,
+      ...tattoos.blackwork,
+      ...tattoos.outros
     ];
   };
 
   const allImages = getAllImages();
+
+  // Show loading state
+  if (loading) {
+    return (
+      <section id="portfolio" className="portfolio-section" ref={ref}>
+        <div className="container">
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin mr-2" />
+            <span>Carregando tattoos...</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <section id="portfolio" className="portfolio-section" ref={ref}>
+        <div className="container">
+          <div className="text-center py-20">
+            <p className="text-red-500">Erro ao carregar tattoos: {error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const tabs = [
     { id: 'realismo', label: 'Realismo', icon: '◉' },
